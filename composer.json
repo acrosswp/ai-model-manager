@@ -1,0 +1,31 @@
+{
+	"name": "wpboilerplate/ai-model-preferences",
+	"type": "wordpress-plugin",
+	"license": "GPL-2.0-or-later",
+	"description": "Composer to autoload the condition checking for which this add-on is made",
+	"homepage": "https://github.com/AcrossWP/",
+	"minimum-stability": "dev",
+	"require": {
+		"php": ">=7.4",
+		"coenjacobs/mozart": "^0.7"
+	},
+	"keywords": [
+		"wordpress",
+		"plugin"
+	],
+	"support": {
+		"issues": "https://github.com//AcrossWP/ai-model-preferences/issues"
+	},
+	"authors": [
+		{
+			"name": "WPBoilerplate"
+		}
+	],
+	"autoload": {
+		"psr-4": {
+			"AI_Assistant_Manager\\Includes\\": "includes/",
+			"AI_Assistant_Manager\\Admin\\": "admin/",
+			"AI_Assistant_Manager\\Public\\": "public/"
+		}
+	}
+}

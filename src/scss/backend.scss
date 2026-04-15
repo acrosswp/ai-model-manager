@@ -1,0 +1,99 @@
+/**
+ * AI Model Preferences - Backend Admin Styles
+ *
+ * Compiled from src/scss/backend.scss into build/css/backend.css via wp-scripts.
+ *
+ * @package    AI_Assistant_Manager
+ * @since      1.0.0
+ */
+
+// =============================================================================
+// Settings Page — Model Preferences Table
+//
+// Classic HTML table rendered as a fallback / server-side scaffold.
+// Selectors are prefixed with .aam- (AI Model Preferences) to avoid conflicts
+// with WordPress core styles.
+// =============================================================================
+
+/// Outer table wrapper for the model-preferences settings table.
+.aam-models-table {
+	border-collapse: collapse;
+	width: 100%;
+	max-width: 800px;
+	margin-top: 16px;
+
+	// ---------------------------------------------------------------------------
+	// Cell defaults — applied to both <th> and <td> for consistent spacing.
+	// ---------------------------------------------------------------------------
+	th,
+	td {
+		padding: 10px 14px;
+		text-align: left;
+		border-bottom: 1px solid #ddd;
+	}
+
+	// ---------------------------------------------------------------------------
+	// Header row — visually distinct from body rows.
+	// ---------------------------------------------------------------------------
+	thead th {
+		background: #f6f7f7;
+		font-weight: 600;
+		font-size: 13px;
+	}
+
+	// ---------------------------------------------------------------------------
+	// Body rows — subtle hover highlight for readability.
+	// ---------------------------------------------------------------------------
+	tbody tr {
+		&:hover {
+			background: #f9f9f9;
+		}
+	}
+}
+
+/// <select> control inside the model-preferences table.
+/// Enforces a minimum width so short model names don't collapse the column.
+.aam-model-select {
+	min-width: 260px;
+}
+
+// =============================================================================
+// Settings Page — React App Mount Point
+//
+// The React settings app (src/js/settings.js) mounts into #aiam-settings-root.
+// These styles control the layout wrapper and component overrides so the
+// @wordpress/components Card / Notice / Button output fits the WP admin chrome.
+// =============================================================================
+
+/// Root mount point injected by Menu::render_page().
+#aiam-settings-root {
+	margin-top: 20px;
+}
+
+/// Top-level wrapper rendered by the SettingsApp React component.
+.aiam-settings-app {
+	max-width: 720px;
+
+	// ---------------------------------------------------------------------------
+	// Notice — reset default Notice top margin so it sits flush at the top
+	// of the settings app rather than adding unexpected space.
+	// ---------------------------------------------------------------------------
+	.aiam-notice {
+		margin: 0 0 16px;
+	}
+
+	// ---------------------------------------------------------------------------
+	// Card — remove the default top margin that @wordpress/components Card
+	// adds, since our layout already provides spacing via #aiam-settings-root.
+	// ---------------------------------------------------------------------------
+	.aiam-card {
+		margin-top: 0;
+	}
+
+	// ---------------------------------------------------------------------------
+	// Save row — add consistent top spacing above the Save Changes button.
+	// ---------------------------------------------------------------------------
+	.aiam-save-row {
+		margin-top: 16px;
+	}
+}
