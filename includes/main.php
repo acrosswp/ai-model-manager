@@ -126,7 +126,6 @@ final class Main {
 
 		$this->load_dependencies();
 
-		$this->set_locale();
 
 		$this->load_hooks();
 	}
@@ -272,21 +271,6 @@ final class Main {
 		$this->loader = Loader::instance();
 	}
 
-	/**
-	 * Define the locale for this plugin for internationalization.
-	 *
-	 * Uses the AI_Model_Preferences_i18n class in order to set the domain and to register the hook
-	 * with WordPress.
-	 *
-	 * @since    0.0.1
-	 * @access   private
-	 */
-	private function set_locale() {
-		$i18n = new I18n();
-
-		// Now attach it to `init`, not `plugins_loaded`
-		$this->loader->add_action( 'init', $i18n, 'do_load_textdomain' );
-	}
 
 
 	/**
