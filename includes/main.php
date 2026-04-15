@@ -303,15 +303,18 @@ final class Main {
 	/**
 	 * Register plugin-wide hooks (frontend and admin) such as AI model preference filters.
 	 *
+	 * Registered directly with add_filter() (not deferred through the Loader) so they
+	 * are active from plugin load time rather than only after plugins_loaded fires.
+	 *
 	 * @since    1.0.0
 	 * @access   private
 	 */
 	private function define_plugin_hooks() {
 
 		$model_prefs = new Model_Preferences();
-		$this->loader->add_filter( 'wpai_preferred_text_models', $model_prefs, 'filter_text_models', 1111 );
-		$this->loader->add_filter( 'wpai_preferred_image_models', $model_prefs, 'filter_image_models', 1111 );
-		$this->loader->add_filter( 'wpai_preferred_vision_models', $model_prefs, 'filter_vision_models', 1111 );
+		add_filter( 'wpai_preferred_text_models',  array( $model_prefs, 'filter_text_models' ),  1111 );
+		add_filter( 'wpai_preferred_image_models', array( $model_prefs, 'filter_image_models' ), 1111 );
+		add_filter( 'wpai_preferred_vision_models', array( $model_prefs, 'filter_vision_models' ), 1111 );
 	}
 
 	/**
