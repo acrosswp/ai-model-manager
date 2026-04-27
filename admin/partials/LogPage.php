@@ -128,7 +128,17 @@ class LogPage {
 					<tr><th><?php esc_html_e( 'Capability', 'acrossai-model-manager' ); ?></th><td><?php echo esc_html( $row->capability ); ?></td></tr>
 					<tr><th><?php esc_html_e( 'Provider', 'acrossai-model-manager' ); ?></th><td><?php echo esc_html( $row->provider_name . ' (' . $row->provider_id . ')' ); ?></td></tr>
 					<tr><th><?php esc_html_e( 'Model', 'acrossai-model-manager' ); ?></th><td><?php echo esc_html( $row->model_name . ' (' . $row->model_id . ')' ); ?></td></tr>
-					<tr><th><?php esc_html_e( 'Finish Reason', 'acrossai-model-manager' ); ?></th><td><?php echo esc_html( $row->finish_reason ); ?></td></tr>
+					<tr>
+						<th><?php esc_html_e( 'Finish Reason', 'acrossai-model-manager' ); ?></th>
+						<td>
+							<?php if ( 'error' === $row->finish_reason ) : ?>
+								<span style="color:#cc1818;font-weight:600;"><?php esc_html_e( 'error', 'acrossai-model-manager' ); ?></span>
+								&nbsp;<em style="color:#777;"><?php esc_html_e( '(Request failed — API error, invalid key, network failure, or timeout)', 'acrossai-model-manager' ); ?></em>
+							<?php else : ?>
+								<?php echo esc_html( $row->finish_reason ); ?>
+							<?php endif; ?>
+						</td>
+					</tr>
 					<tr><th><?php esc_html_e( 'Duration', 'acrossai-model-manager' ); ?></th><td><?php echo absint( $row->duration_ms ); ?> ms</td></tr>
 					<tr><th><?php esc_html_e( 'Prompt Tokens', 'acrossai-model-manager' ); ?></th><td><?php echo absint( $row->prompt_tokens ); ?></td></tr>
 					<tr><th><?php esc_html_e( 'Completion Tokens', 'acrossai-model-manager' ); ?></th><td><?php echo absint( $row->completion_tokens ); ?></td></tr>
@@ -330,7 +340,13 @@ class AI_Log_List_Table extends \WP_List_Table {
 				return absint( $item['duration_ms'] ) . ' ms';
 
 			case 'finish_reason':
-				return esc_html( $item['finish_reason'] );
+				$reason = $item['finish_reason'] ?? '';
+				if ( 'error' === $reason ) {
+					return '<span style="color:#cc1818;font-weight:600;" title="' . esc_attr__( 'Request failed — API error, invalid key, network failure, or timeout.', 'acrossai-model-manager' ) . '">'
+						. esc_html__( 'error', 'acrossai-model-manager' )
+						. '</span>';
+				}
+				return esc_html( $reason );
 
 			default:
 				return esc_html( $item[ $column_name ] ?? '' );

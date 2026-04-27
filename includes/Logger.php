@@ -25,12 +25,24 @@ class Logger {
 
 	/**
 	 * Stack of generation context entries for timing and caller tracking.
-	 * Each entry: [ 'time' => float, 'caller' => array ].
+	 * Each entry: [ 'time' => float, 'caller' => array, 'event' => BeforeGenerateResultEvent ].
 	 * Uses a stack to correctly handle nested/recursive generation calls.
+	 * On success, on_after_generate() pops the entry. Any entry still in the
+	 * stack at PHP shutdown represents a failed request (API error, network
+	 * failure, invalid key, timeout, etc.) and is logged by drain_failed_requests().
 	 *
 	 * @var array[]
 	 */
 	private static $start_times = array();
+
+	/**
+	 * Whether the PHP shutdown function has already been registered.
+	 * Prevents duplicate registration when multiple AI requests are made
+	 * in a single page load.
+	 *
+	 * @var bool
+	 */
+	private static $shutdown_registered = false;
 
 	/**
 	 * Internal path segments to skip when walking the backtrace to find
@@ -56,8 +68,10 @@ class Logger {
 	}
 
 	/**
-	 * Captures the start time and caller info before an AI generation call.
+	 * Captures the start time, caller info, and the event before an AI generation call.
 	 * Backtrace must be captured here while the original call stack is intact.
+	 * Also registers the PHP shutdown function (once) so that any requests that
+	 * fail before AfterGenerateResultEvent fires are logged as errors.
 	 *
 	 * @param BeforeGenerateResultEvent $event
 	 */
@@ -65,7 +79,13 @@ class Logger {
 		self::$start_times[] = array(
 			'time'   => microtime( true ),
 			'caller' => self::resolve_caller(),
+			'event'  => $event,
 		);
+
+		if ( ! self::$shutdown_registered ) {
+			self::$shutdown_registered = true;
+			register_shutdown_function( array( static::class, 'drain_failed_requests' ) );
+		}
 	}
 
 	/**
@@ -146,6 +166,72 @@ class Logger {
 				$retention_days
 			)
 		);
+	}
+
+	/**
+	 * Called on PHP shutdown to log any AI requests that started but never completed.
+	 *
+	 * If on_after_generate() was called for every on_before_generate() call, the
+	 * stack will be empty by the time this runs and nothing happens. Any entries
+	 * that remain represent requests where the AI provider returned an error
+	 * (invalid API key, network failure, timeout, 5xx, etc.) — the PHP AI SDK
+	 * threw an exception which was caught by WP_AI_Client_Prompt_Builder before
+	 * it could fire AfterGenerateResultEvent.
+	 */
+	public static function drain_failed_requests(): void {
+		foreach ( self::$start_times as $context ) {
+			self::log_failed_request( $context );
+		}
+		self::$start_times = array();
+	}
+
+	/**
+	 * Writes a single failed request to the log table.
+	 * All metadata (provider, model, capability, prompt) comes from the
+	 * BeforeGenerateResultEvent stored in the context entry.
+	 *
+	 * @param array $context Stack entry: { time: float, caller: array, event: BeforeGenerateResultEvent }
+	 */
+	private static function log_failed_request( array $context ): void {
+		global $wpdb;
+
+		if ( empty( $context['event'] ) ) {
+			return;
+		}
+
+		$duration_ms = (int) round( ( microtime( true ) - $context['time'] ) * 1000 );
+		$caller      = $context['caller'];
+		$event       = $context['event'];
+
+		$model    = $event->getModel();
+		$provider = $model->providerMetadata();
+		$meta     = $model->metadata();
+		$capability = $event->getCapability();
+
+		$data    = array(
+			'result_id'         => '',
+			'capability'        => $capability ? $capability->value : '',
+			'provider_id'       => $provider->getId(),
+			'provider_name'     => $provider->getName(),
+			'model_id'          => $meta->getId(),
+			'model_name'        => $meta->getName(),
+			'prompt_text'       => self::extract_prompt_text( $event->getMessages() ),
+			'response_text'     => '',
+			'prompt_tokens'     => 0,
+			'completion_tokens' => 0,
+			'total_tokens'      => 0,
+			'finish_reason'     => 'error',
+			'duration_ms'       => $duration_ms,
+			'source_type'       => $caller['source_type'],
+			'source_name'       => $caller['source_name'],
+			'source_file'       => $caller['source_file'],
+			'source_line'       => $caller['source_line'],
+			'user_id'           => get_current_user_id(),
+			'created_at'        => current_time( 'mysql', true ),
+		);
+		$formats = array( '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%d', '%d', '%s', '%d', '%s', '%s', '%s', '%d', '%d', '%s' );
+
+		$wpdb->insert( self::get_table_name(), $data, $formats ); // phpcs:ignore WordPress.DB.DirectDatabaseQuery
 	}
 
 	/**
