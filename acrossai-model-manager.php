@@ -23,7 +23,7 @@ namespace AcrossAI_Model_Manager;
  * Plugin Name:       AcrossAI Model Manager
  * Plugin URI:        https://github.com/AcrossWP/acrossai-model-manager
  * Description:       Pin a preferred AI model per capability (text, image, vision), set a global HTTP request timeout, and log every AI generation call with full source tracking.
- * Version:           0.0.5
+ * Version:           0.0.6
  * Requires at least: 7.0
  * Author:            okpoojagupta
  * Author URI:        http://github.com/okpoojagupta/
@@ -44,7 +44,7 @@ if ( ! defined( 'WPINC' ) ) {
  * Rename this for your plugin and update it as you release new versions.
  */
 define( 'ACAI_MODEL_MANAGER_PLUGIN_FILE', __FILE__ );
-define( 'ACAI_MODEL_MANAGER_VERSION', '0.0.5' );
+define( 'ACAI_MODEL_MANAGER_VERSION', '0.0.6' );
 
 /**
  * The code that runs during plugin activation.

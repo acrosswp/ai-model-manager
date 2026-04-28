@@ -44,7 +44,7 @@ class Activator {
 	 */
 	public static function maybe_upgrade(): void {
 		$installed = (int) get_option( 'acai_model_manager_db_version', 0 );
-		if ( $installed < 2 ) {
+		if ( $installed < 3 ) {
 			self::create_tables();
 		}
 	}
@@ -73,6 +73,7 @@ class Activator {
   total_tokens int(11) unsigned NOT NULL DEFAULT 0,
   thought_tokens int(11) unsigned DEFAULT NULL,
   finish_reason varchar(50) NOT NULL DEFAULT '',
+  error_message text NOT NULL,
   duration_ms int(11) unsigned NOT NULL DEFAULT 0,
   source_type varchar(20) NOT NULL DEFAULT '',
   source_name varchar(255) NOT NULL DEFAULT '',
@@ -91,7 +92,7 @@ class Activator {
 		require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 		dbDelta( $sql );
 
-		update_option( 'acai_model_manager_db_version', 2 );
+		update_option( 'acai_model_manager_db_version', 3 );
 	}
 
 	/**

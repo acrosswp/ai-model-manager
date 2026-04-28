@@ -5,7 +5,7 @@ Tags: ai, ai models, model manager, ai logging, wordpress ai
 Requires at least: 7.0
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 0.0.5
+Stable tag: 0.0.6
 License: GPL-2.0+
 License URI: http://www.gnu.org/licenses/gpl-2.0.html
 
@@ -93,6 +93,12 @@ Any provider registered with the [AI plugin](https://wordpress.org/plugins/ai/) 
 3. Screenshots to show all the of WP AI Client
 
 == Changelog ==
+
+= 0.0.6 =
+* Log failed AI requests (invalid key, network error, timeout) — uses PHP shutdown function to drain any stack entries not popped by `wp_ai_client_after_generate_result`; failed rows stored with `finish_reason = 'error'` and full elapsed duration.
+* Capture error messages for failed requests via `http_api_debug` — supports OpenAI, Hugging Face, and generic JSON error bodies; error detail shown in log list (tooltip on red badge) and detail view.
+* Replace `WPAI_PLUGIN_FILE` check with `has_ai_credentials()` — Model Preferences now enables for any configured provider (llama.cpp, OpenAI, etc.), not just when the AI plugin is loaded.
+* Simplify JS Model Preferences gate — removed `aiPluginActive` flag; section enable/disable is now driven solely by `hasAnyProvider` (presence of models in the PHP payload).
 
 = 0.0.5 =
 * Added AI request logging system — every successful AI generation call is now logged to a custom database table (`{prefix}acai_ai_logs`).

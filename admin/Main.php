@@ -204,24 +204,28 @@ class Main {
 
 		// Inject settings data after the handle is registered (wp_localize_script requires a registered handle).
 		if ( 'settings_page_acrossai-model-manager' === $hook ) {
-			// Use has_ai_credentials() from the AI plugin (WordPress\AI namespace) to
-				// determine whether at least one AI provider has credentials configured.
-				// Fall back to false if the function doesn't exist (AI plugin not active).
-				$ai_plugin_active = function_exists( 'WordPress\\AI\\has_ai_credentials' )
-					&& \WordPress\AI\has_ai_credentials();
+			// Warm up provider transients (e.g. llama.cpp) before checking credentials.
+			// Some providers only signal availability via wpai_has_ai_credentials after
+			// their model list has been fetched at least once.
+			apply_filters( 'wpai_preferred_text_models', array() );
 
-				wp_localize_script(
-					$this->plugin_name,
-					'acaiModelManagerSettings',
-					array(
-						'models'         => $ai_plugin_active ? $this->get_models_grouped_by_capability() : array(),
-						'preferences'    => (object) get_option( \AcrossAI_Model_Manager\Admin\Partials\Menu::OPTION_KEY, array() ),
-						'nonce'          => wp_create_nonce( 'wp_rest' ),
-						'optionName'     => \AcrossAI_Model_Manager\Admin\Partials\Menu::OPTION_KEY,
-						'aiPluginActive' => $ai_plugin_active,
-						'connectorsUrl'  => admin_url( 'options-connectors.php' ),
-					)
-				);
+			$has_ai_credentials = function_exists( 'WordPress\\AI\\has_ai_credentials' )
+				? \WordPress\AI\has_ai_credentials()
+				: false;
+			$models             = $has_ai_credentials ? $this->get_models_grouped_by_capability() : array();
+
+			wp_localize_script(
+				$this->plugin_name,
+				'acaiModelManagerSettings',
+				array(
+					'models'           => $models,
+					'hasAiCredentials' => $has_ai_credentials,
+					'preferences'      => (object) get_option( \AcrossAI_Model_Manager\Admin\Partials\Menu::OPTION_KEY, array() ),
+					'nonce'            => wp_create_nonce( 'wp_rest' ),
+					'optionName'       => \AcrossAI_Model_Manager\Admin\Partials\Menu::OPTION_KEY,
+					'connectorsUrl'    => admin_url( 'options-connectors.php' ),
+				)
+			);
 		}
 	}
 
